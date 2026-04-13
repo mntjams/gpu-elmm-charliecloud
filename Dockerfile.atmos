@@ -13,12 +13,26 @@ RUN apt-get update && apt-get install -y \
     libblas-dev \
     liblapack-dev \
     libgsl-dev \
+    openmpi-bin \
+    libopenmpi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz \
     && tar -zxvf cmake-4.1.2-linux-x86_64.tar.gz -C /opt/ \
     && ln -s /opt/cmake-4.1.2-linux-x86_64/bin/* /usr/local/bin/ \
     && rm cmake-4.1.2-linux-x86_64.tar.gz
+
+WORKDIR /opt
+RUN git clone https://github.com/icl-utk-edu/heffte.git \
+    && cd heffte \
+    && mkdir build && cd build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+             -DHeffte_ENABLE_CUDA=ON \
+             -DBUILD_SHARED_LIBS=ON \
+             -DCMAKE_CUDA_ARCHITECTURES="70;80;90;100" \
+             .. \
+    && make install \
+    && cd /opt && rm -rf heffte
 
 # Create a build directory inside the container
 WORKDIR /opt/build
