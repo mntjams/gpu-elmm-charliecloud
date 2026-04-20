@@ -19,6 +19,14 @@ mkdir mapped
 ```
 
 ## Compiling the Source
+```bash
+ch-run -b mapped:/opt/build imgdir -- /bin/bash -c "cd /opt/build/poisson-solver && unset CC && unset CXX && cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Yes -B build-release/ && make -C build-release/"
+ch-run -b mapped:/opt/build imgdir -- /bin/bash -c "cd /opt/build/gpu-elmm/src && unset CC && unset CXX && ./make_release"
+```
+By default the non-distributed version is built.
+You can build the distributed version by adding `-DUSE_MPI=Yes` into the `cmake` command.
+Alternatively, you can do all this in interactive mode.
+
 Start an interactive shell inside the container
 ```bash
 ch-run -b mapped:/opt/build imgdir -- /bin/bash
@@ -46,8 +54,7 @@ make -C build-release/
 At last, compile `ELMM` and exit
 ```bash
 cd ../gpu-elmm/src
-# TODO - DP has to be used for now as SP is not yet implemented in `poisson-solver`
-./make_release prec=dp
+./make_release
 exit
 ```
 
