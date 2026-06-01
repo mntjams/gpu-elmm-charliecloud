@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     build-essential \
+    cgdb \
     wget \
     gfortran \
     git \
@@ -16,6 +17,10 @@ RUN apt-get update && apt-get install -y \
     libgsl-dev \
     openmpi-bin \
     libopenmpi-dev \
+    vim \
+    nodejs \
+    npm \
+    clangd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz \
