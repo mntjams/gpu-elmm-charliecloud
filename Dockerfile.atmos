@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     scons \
     python3 \
     libfftw3-dev \
+    libfftw3-mpi-dev \
     libblas-dev \
     liblapack-dev \
     libgsl-dev \
@@ -23,12 +24,30 @@ RUN apt-get update && apt-get install -y \
     clangd \
     clang-format \
     clang-tidy \
+    autoconf \
+    automake \
+    libtool \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz \
     && tar -zxvf cmake-4.1.2-linux-x86_64.tar.gz -C /opt/ \
     && ln -s /opt/cmake-4.1.2-linux-x86_64/bin/* /usr/local/bin/ \
     && rm cmake-4.1.2-linux-x86_64.tar.gz
+
+# Build and install PFFT from source
+RUN cd /opt \
+    && git clone https://github.com/mpip/pfft.git \
+    && cd pfft \
+    && ./bootstrap.sh \
+    && CC=mpicc FC=mpif90 ./configure --prefix=/usr/local \
+    && make -j$(nproc) \
+    && make install \
+    && make clean \
+    && CC=mpicc FC=mpif90 ./configure --prefix=/usr/local --enable-float \
+    && make -j$(nproc) \
+    && make install \
+    && cd /opt \
+    && rm -rf pfft
 
 WORKDIR /opt
 
