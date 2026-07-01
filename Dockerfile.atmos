@@ -16,8 +16,7 @@ RUN apt-get update && apt-get install -y \
     libblas-dev \
     liblapack-dev \
     libgsl-dev \
-    openmpi-bin \
-    libopenmpi-dev \
+    libpmix-dev \
     vim \
     nodejs \
     npm \
@@ -29,12 +28,25 @@ RUN apt-get update && apt-get install -y \
     libtool \
     && rm -rf /var/lib/apt/lists/*
 
+# Build cmake
 RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz \
     && tar -zxvf cmake-4.1.2-linux-x86_64.tar.gz -C /opt/ \
     && ln -s /opt/cmake-4.1.2-linux-x86_64/bin/* /usr/local/bin/ \
     && rm cmake-4.1.2-linux-x86_64.tar.gz
 
-# Build and install PFFT from source
+# Build OpenMPI with PMIx support
+# (Must be built before PFFT!)
+RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.gz \
+    && tar -xzf openmpi-5.0.8.tar.gz \
+    && cd openmpi-5.0.8 \
+    && ./configure --prefix=/usr/local --with-pmix \
+    && make -j$(nproc) all \
+    && make install \
+    && ldconfig \
+    && cd .. \
+    && rm -rf openmpi-5.0.8 openmpi-5.0.8.tar.gz
+
+# Build PFFT float and double versions
 RUN cd /opt \
     && git clone https://github.com/mpip/pfft.git \
     && cd pfft \
