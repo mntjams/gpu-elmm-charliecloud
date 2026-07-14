@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     liblapack-dev \
     libgsl-dev \
     libpmix-dev \
+    libmunge-dev \
     vim \
     nodejs \
     npm \
@@ -36,7 +37,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-l
     && ln -s /opt/cmake-4.1.2-linux-x86_64/bin/* /usr/local/bin/ \
     && rm cmake-4.1.2-linux-x86_64.tar.gz
 
-# Build OpenMPI with PMIx and CUDA support
+# Build OpenMPI with PMIx, CUDA and munge support
 # (Must be built before PFFT!)
 RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.gz \
     && tar -xzf openmpi-5.0.8.tar.gz \
@@ -46,6 +47,7 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.g
         --with-pmix \
         --with-cuda=/usr/local/cuda \
         --with-cuda-libdir=/usr/local/cuda/lib64/stubs \
+        --with-munge \
     && make -j$(nproc) all \
     && make install \
     && ldconfig \
