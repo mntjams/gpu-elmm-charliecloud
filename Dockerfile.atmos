@@ -51,6 +51,7 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.g
     && ldconfig \
     && cd .. \
     && rm -rf openmpi-5.0.8 openmpi-5.0.8.tar.gz
+#TODO - Also build with UCX?
 
 # Build PFFT float and double versions
 RUN cd /opt \
