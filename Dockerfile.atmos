@@ -37,7 +37,22 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-l
     && ln -s /opt/cmake-4.1.2-linux-x86_64/bin/* /usr/local/bin/ \
     && rm cmake-4.1.2-linux-x86_64.tar.gz
 
-# Build OpenMPI with PMIx, CUDA and munge support
+# Build and install CUDA-aware UCX
+RUN wget https://github.com/openucx/ucx/releases/download/v1.17.0/ucx-1.17.0.tar.gz \
+    && tar -xzf ucx-1.17.0.tar.gz \
+    && cd ucx-1.17.0 \
+    && ./configure \
+        --prefix=/usr/local/ucx \
+        --with-cuda=/usr/local/cuda \
+        --enable-mt \
+    && make -j$(nproc) \
+    && make install \
+    && cd .. \
+    && rm -rf ucx-1.17.0 ucx-1.17.0.tar.gz \
+    && echo "/usr/local/ucx/lib" > /etc/ld.so.conf.d/ucx.conf \
+    && ldconfig
+
+# Build OpenMPI with PMIx, CUDA, munge and UCX support
 # (Must be built before PFFT!)
 RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.gz \
     && tar -xzf openmpi-5.0.8.tar.gz \
@@ -48,12 +63,12 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.g
         --with-cuda=/usr/local/cuda \
         --with-cuda-libdir=/usr/local/cuda/lib64/stubs \
         --with-munge \
+        --with-ucx=/usr/local/ucx \
     && make -j$(nproc) all \
     && make install \
     && ldconfig \
     && cd .. \
     && rm -rf openmpi-5.0.8 openmpi-5.0.8.tar.gz
-#TODO - Also build with UCX?
 
 # Build PFFT float and double versions
 RUN cd /opt \
