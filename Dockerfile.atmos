@@ -5,7 +5,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cgdb \
     wget \
     gfortran \
     git \
@@ -16,11 +15,6 @@ RUN apt-get update && apt-get install -y \
     libpmix-dev \
     libmunge-dev \
     vim \
-    nodejs \
-    npm \
-    clangd \
-    clang-format \
-    clang-tidy \
     autoconf \
     automake \
     libtool \
