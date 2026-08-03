@@ -51,6 +51,7 @@ RUN wget https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/${UCX}
 ARG OPENMPI_VER_MAJ_MIN="5.0"
 ARG OPENMPI_VERSION="${OPENMPI_VER_MAJ_MIN}.8"
 ARG OPENMPI="openmpi-${OPENMPI_VERSION}"
+# See IMPORTANT NOTE at https://github.com/openucx/ucx/wiki/OpenMPI-and-OpenSHMEM-installation-with-UCX#running-open-mpi-with-ucx
 RUN wget https://download.open-mpi.org/release/open-mpi/v${OPENMPI_VER_MAJ_MIN}/${OPENMPI}.tar.gz \
     && tar --extract --gzip --file ${OPENMPI}.tar.gz \
     && cd $OPENMPI \
@@ -61,7 +62,6 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v${OPENMPI_VER_MAJ_MIN}/
         --with-cuda-libdir=/usr/local/cuda/lib64/stubs \
         --with-munge \
         --with-ucx=/usr/local/ucx \
-        # See IMPORTANT NOTE at https://github.com/openucx/ucx/wiki/OpenMPI-and-OpenSHMEM-installation-with-UCX#running-open-mpi-with-ucx
         --enable-mca-no-build=btl-uct \
     && make -j$(nproc) all \
     && make install \
@@ -76,7 +76,6 @@ RUN cd /opt \
     && wget https://www.fftw.org/${FFTW}.tar.gz \
     && tar --extract --gzip --file ${FFTW}.tar.gz \
     && cd $FFTW \
-    # 1. Build Double Precision
     && ./configure \
         --prefix=/usr/local \
         --enable-shared \
