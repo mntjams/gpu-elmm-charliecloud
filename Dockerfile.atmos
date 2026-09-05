@@ -20,6 +20,11 @@ RUN apt-get update && apt-get install -y \
     libtool \
     doxygen \
     graphviz \
+    libibverbs-dev \
+    librdmacm-dev \
+    rdma-core \
+    libnuma-dev \
+    cuda-nsight-systems-12-9 \
     && rm -rf /var/lib/apt/lists/*
 
 # Get CMake binary
@@ -30,6 +35,17 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/${
     && ln -s /opt/${CMAKE}-linux-x86_64/bin/* /usr/local/bin/ \
     && rm ${CMAKE}-linux-x86_64.tar.gz
 
+ARG GDRCOPY_VERSION=2.6
+ARG GDRCOPY=gdrcopy-${GDRCOPY_VERSION}
+RUN wget https://github.com/NVIDIA/gdrcopy/archive/refs/tags/v${GDRCOPY_VERSION}.tar.gz -O ${GDRCOPY}.tar.gz \
+    && tar --extract --gzip --file ${GDRCOPY}.tar.gz \
+    && cd ${GDRCOPY} \
+    && make -j$(nproc) lib \
+    && make lib_install \
+    && cd .. \
+    && rm -rf ${GDRCOPY} ${GDRCOPY}.tar.gz \
+    && ldconfig
+
 # Build and install CUDA-aware UCX
 ARG UCX_VERSION=1.21.0
 ARG UCX=ucx-${UCX_VERSION}
@@ -39,6 +55,9 @@ RUN wget https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/${UCX}
     && ./contrib/configure-release-mt \
         --prefix=/usr/local/ucx \
         --with-cuda=/usr/local/cuda \
+        --with-gdrcopy=/usr/local \
+        --with-verbs \
+        --with-rdmacm \
     && make -j$(nproc) \
     && make install \
     && cd .. \
@@ -105,13 +124,30 @@ RUN cd /opt \
     && cd /opt \
     && rm -rf $FFTW ${FFTW}.tar.gz
 
-# Build PFFT float and double versions
+# Build PFFT all configs of float/double, MPI/standard
 RUN cd /opt \
-    && git clone https://github.com/mpip/pfft.git \
+    && wget -O pfft.tar.gz https://github.com/mpip/pfft/archive/refs/heads/master.tar.gz \
+    && tar --extract --gzip --file pfft.tar.gz \
+    && mv pfft-master pfft \
     && cd pfft \
     && ./bootstrap.sh \
+    && CC=mpicc FC=mpif90 ./configure CFLAGS="-O3 -fopenmp" FCFLAGS="-O3 -fopenmp" \
+        --prefix=/usr/local \
+        --enable-openmp \
+        --disable-tests \
+    && make -j$(nproc) \
+    && make install \
+    && make clean \
     && CC=mpicc FC=mpif90 ./configure CFLAGS="-O3" FCFLAGS="-O3" \
         --prefix=/usr/local \
+        --disable-tests \
+    && make -j$(nproc) \
+    && make install \
+    && make clean \
+    && CC=mpicc FC=mpif90 ./configure CFLAGS="-O3 -fopenmp" FCFLAGS="-O3 -fopenmp" \
+        --prefix=/usr/local \
+        --enable-float \
+        --enable-openmp \
         --disable-tests \
     && make -j$(nproc) \
     && make install \
@@ -124,6 +160,8 @@ RUN cd /opt \
     && make install \
     && cd /opt \
     && rm -rf pfft
+
+RUN printf 'pml = ucx\n' >> /usr/local/etc/openmpi-mca-params.conf
 
 # Create a build directory inside the container
 WORKDIR /opt/build
