@@ -163,5 +163,8 @@ RUN cd /opt \
 
 RUN printf 'pml = ucx\n' >> /usr/local/etc/openmpi-mca-params.conf
 
+ENV PATH="/usr/local/cuda/bin:${PATH}" \
+    CUDACXX="/usr/local/cuda/bin/nvcc"
+
 # Create a build directory inside the container
 WORKDIR /opt/build
